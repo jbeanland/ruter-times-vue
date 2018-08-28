@@ -11,7 +11,7 @@
             <div class='navbar-brand fill-space absolute'>
 
                 <div class='navbar-item'>
-                    <font-awesome-icon icon="hashtag" size="2x" class="nav-icon"/>
+                    <font-awesome-icon icon="hashtag" size="2x" class="red"/>
                 </div>
 
                 <div class="fill-space">
@@ -23,17 +23,17 @@
                         </p>
                         <p class="control ">
                             <button class="button is-black nav-button" @click="refresh">
-                                <font-awesome-icon icon="sync-alt" size="lg" class="nav-icon"/>
+                                <font-awesome-icon icon="sync-alt" size="lg" class="green"/>
                             </button>
                         </p>
                         <p class="control ">
 
-                            <button v-if="currentIsFavourite" class='button is-black nav-button' @click="removeFavourite">
-                                <font-awesome-icon icon="heart" size="lg" class="nav-icon"/>
+                            <button v-if="currentIsFavourite" class='button is-black nav-button white' @click="removeFavourite">
+                                <font-awesome-icon icon="heart" size="lg" class="red"/>
                             </button>
 
-                            <button v-else class='button is-black nav-button' @click='setFavourite'>
-                                <font-awesome-icon :icon="['far', 'heart']" size="lg" class="nav-icon"/>
+                            <button v-else class='button is-black white nav-button' @click='setFavourite'>
+                                <font-awesome-icon :icon="['far', 'heart']" size="lg" class="white"/>
                             </button>
 
                         </p>
@@ -43,7 +43,7 @@
                             <b-dropdown hoverable position="is-bottom-left">
                                 <button class="button is-black nav-button" slot="trigger" id="dropdown-button">
                                     <span>
-                                        <font-awesome-icon icon="caret-down" size="lg" class="nav-icon"/>
+                                        <font-awesome-icon icon="caret-down" size="lg" class="white"/>
 
                                     </span>
                                 </button>
@@ -68,13 +68,14 @@
         {{ errorMessage }}
     </div>
 
+
     <div class='container'>
-        <div class='columns'>
+        <div class='columns is-multiline'>
 
 
-            <div v-for="platform in departureTimes">
-                <timetable :data="platform"/>
-            </div>
+            <!-- <div v-for="platform in departureTimes"> -->
+                <timetable v-for="(platform, i) in departureTimes" :key="i" :data="platform"/>
+            <!-- </div> -->
         </div>
     </div>
 <!--
@@ -394,15 +395,23 @@ export default {
 }
 
 .rounded {
-    border-radius: .25rem;
+    border-radius: .25rem !important;
 }
 
 .shadow {
     box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
 }
 
-.nav-icon {
+.white {
     color: white;
+}
+
+.red {
+    color: #FF0000E6;
+}
+
+.green {
+    color: #30B000;
 }
 
 .nav-button {
@@ -432,23 +441,6 @@ export default {
 #dropdown-container {
     padding: .5rem !important;
     margin: auto;
-}
-
-/*#input {
-    min-width:50px!important;
-    max-width:99.99%!important;
-}*/
-
-.row {
-    display: table !important;
-    width: 100% !important;
-    table-layout: fixed !important;
-    border-spacing: 10px !important;
-}
-
-.column {
-    display: table-cell !important;
-
 }
 
 </style>

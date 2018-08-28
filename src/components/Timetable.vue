@@ -10,7 +10,7 @@
             </div>
 
             <div class='card-content'>
-                <div class="card rounded">
+                <div class="card">
 
                     <table class="table is-fullwidth">
 
@@ -80,7 +80,10 @@
 }
 
 .card-header {
-    background: #CCCCCC !important;
+    /*background: #CCCCCC !important;*/
+    background: #FF0000E6 !important;
+    border-top-right-radius: .25rem !important;
+    border-top-left-radius: .25rem !important;
 }
 
 .card-content {
@@ -108,6 +111,14 @@ tbody {
 td {
     border: 0px !important;
 }
+
+.border {
+    border-width: 50px;
+    border-color: red;
+    border-spacing: 2rem;
+}
+
+
 
 
 </style>
