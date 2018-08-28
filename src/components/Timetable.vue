@@ -21,7 +21,7 @@
                         <tr v-for='row in data.results'>
                             <td>{{ row.MonitoredVehicleJourney.PublishedLineName }}</td>
                             <td>{{ row.MonitoredVehicleJourney.DestinationName }}</td>
-                            <td>{{ row.minsAway }}</td>
+                            <td>{{ timeToDeparture(row.minsAway) }}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -37,6 +37,18 @@
         props: {
             data: Object,
         },
+        methods: {
+            timeToDeparture (minsAway) {
+                if (minsAway > 1) {
+                    return minsAway + ' minutes';
+                } else if (minsAway == 1) {
+                    return '1 minute';
+                } else {
+                    return 'now';
+                }
+
+            }
+        }
     };
 
 </script>

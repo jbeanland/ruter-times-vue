@@ -2,7 +2,6 @@
 
 <template>
     <div class='autocomplete'>
-        pre input
         <input
             type="text"
             class='input'
@@ -12,6 +11,7 @@
             @keydown.up="onArrowUp"
             @keyup.enter="onEnter"
             @keyup.escape="onEscape"
+            :placeholder="placeholder"
         />
         <ul
             class='autocomplete-results'
@@ -32,7 +32,6 @@
                 {{ result.label }}
             </li>
         </ul>
-        post input
     </div>
 </template>
 
@@ -55,6 +54,11 @@ export default {
             type: Number,
             required: false,
             default: 3,
+        },
+        placeholder: {
+            type: String,
+            required: false,
+            default: '',
         }
     },
     data() {
@@ -109,7 +113,7 @@ export default {
             this.results = this.items.filter(item => this.normalise(item.label).indexOf(this.normalise(this.search)) > -1);
         },
         setResult(result) {
-            this.search = result.label;
+            this.search = '';
             this.isOpen = false;
             this.arrowCounter = -1;
             this.results = [];
