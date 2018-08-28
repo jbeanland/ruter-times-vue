@@ -1,5 +1,6 @@
 <!-- with help from https://alligator.io/vuejs/vue-autocomplete-component/ -->
 
+
 <template>
     <div class='autocomplete control'>
         <input
@@ -79,7 +80,7 @@ export default {
         };
     },
     watch: {
-        items: function (value, oldValue) {
+        items: function (value) {
             if (this.isAsync) {
                 this.results = value;
                 this.isOpen = true;
@@ -89,7 +90,6 @@ export default {
     },
     methods: {
         onChange() {
-            console.log('onChange')
             if (this.search.length >= this.minLength) {
 
                 this.$emit('input', this.search);
@@ -177,13 +177,17 @@ export default {
     .autocomplete-results {
         padding: 0;
         margin: 0;
-        border: 1px solid #eeeeee;
+        border: 1px solid #cccccc;
         height: auto;
         overflow:auto;
         position: absolute;
-        background-color: #f8f8f8;
+        background-color: #5a5a5a;
+        color: white;
         z-index: 10;
         width: auto;
+        /*border-radius: .5rem;*/
+        border-bottom-right-radius: .5rem;
+        border-bottom-left-radius: .5rem;
     }
 
     .autocomplete-result {
@@ -195,8 +199,8 @@ export default {
 
     .autocomplete-result.is-active,
     .autocomplete-result:hover {
-        background-color: #4AAE9B;
-        color: white;
+        background-color: #cccccc;
+        color: black;
     }
 
 </style>

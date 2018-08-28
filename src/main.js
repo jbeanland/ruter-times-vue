@@ -4,8 +4,9 @@ import router from './router'
 import Buefy from 'buefy'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faCoffee, faSyncAlt, faPlusCircle, faMinusCircle, faHeart, faCaretDown, faHashtag } from '@fortawesome/free-solid-svg-icons'
+import { faSyncAlt, faHeart, faCaretDown, faHashtag } from '@fortawesome/free-solid-svg-icons'
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons'
+import { faGithub} from '@fortawesome/free-brands-svg-icons'
 
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
@@ -19,7 +20,7 @@ Vue.component(Buefy.Autocomplete.name, Buefy.Autocomplete)
 
 
 
-library.add(faCoffee, faSyncAlt, faPlusCircle, faMinusCircle, faHeart, faHeartRegular, faCaretDown, faHashtag)
+library.add(faGithub, faSyncAlt, faHeart, faHeartRegular, faCaretDown, faHashtag)
 
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 

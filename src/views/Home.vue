@@ -1,5 +1,4 @@
 <!-- TODO:
-* make it not crazy ugly.
 * Turn into PWA so I can load it independently of Heroku's servers.
  -->
 
@@ -49,7 +48,8 @@
                                 </button>
 
                                 <b-dropdown-item
-                                    v-for="favourite in favourites"
+                                    v-for="(favourite, i) in favourites"
+                                    :key="i"
                                     @click="changeStop(favourite)"
                                 >{{ favourite.label}}</b-dropdown-item>
                             </b-dropdown>
@@ -64,27 +64,49 @@
     </nav>
 
 
-    <div v-if="errorMessage.length > 0">
-        {{ errorMessage }}
+
+    <div id="message-container" v-if="errorMessage.length > 0">
+        <article class="message" id="error-message">
+            <div class="message-body" id='error-message-body'>
+                {{ errorMessage }}
+            </div>
+        </article>
     </div>
 
-
-    <div class='container'>
+    <div class='container main-container'>
         <div class='columns is-multiline'>
 
 
-            <!-- <div v-for="platform in departureTimes"> -->
-                <timetable v-for="(platform, i) in departureTimes" :key="i" :data="platform"/>
-            <!-- </div> -->
+            <timetable v-for="(platform, i) in departureTimes" :key="i" :data="platform"/>
+
+
+
+            <div class='column'>
+                <article class="message is-small">
+                    <div class="message-header">
+                        <p>Last Updated:</p>
+                    </div>
+                    <div class="message-body">
+                        {{ timeSinceUpdate }}
+                    </div>
+                </article>
+            </div>
         </div>
     </div>
-<!--
-    <div>
-        <p>
-            Last Updated: {{ timeSinceUpdate }}
-        </p>
-    </div> -->
 
+
+    <footer class="footer">
+        <div class="content has-text-centered">
+            <p>
+                <span class="text-muted">By Jack Beanland, 2018.
+                    <a href="https://github.com/jbeanland/ruter-times-vue" id='github-link'>
+                                <font-awesome-icon :icon="['fab', 'github']" class="white"/>
+                </a>
+                </span>
+
+            </p>
+        </div>
+    </footer>
 
 
 
@@ -106,14 +128,12 @@ export default {
             favourites: [],
             lastUpdated: null,
             transportTypes: new Set([2, 8]),
-            // newStop: '',
             departureTimes: [],
             currentStop: null,
             currentIsFavourite: false,
             currentDate: Date.now(),
             placeholder: 'Stop...',
             errorMessage: '',
-            dropdownActive: false,
         };
     },
     components: {
@@ -121,27 +141,32 @@ export default {
         Autocomplete,
     },
     watch: {
-        '$route' (to, from) {
-            const newId = this.$route.params.value;
-            const stop = this.stops.find((a)=> { return a.value == newId});
-            if (stop) {
-                this.getTimes(stop);
+        '$route' () {
+            const stopId = this.$route.params.value;
+            if (stopId) {
+                this.update(stopId);
+            } else {
+                window.document.title = "Ruter times"
+                this.lastUpdated = null;
+                this.currentStop = null;
+                this.currentIsFavourite = false;
+                this.errorMessage = '';
+                this.placeholder = 'Stop...'
+                this.departureTimes = [];
+
             }
         }
     },
     mounted() {
-        console.log('mounting');
 
         // get stops from localstorage or from api
         var s = localStorage.getItem('stops')
         if (s) {
             this.stops = JSON.parse(s);
-            console.log('get stops from localStorage');
             // TODO: refresh stops every n days.
             // TODO: store transport types wanted alongside so the user can select what they want, refresh when different to chosen options.
         }
         else {
-            console.log('get stops fresh');
             this.getStops();
         }
 
@@ -156,30 +181,27 @@ export default {
 
         // if it is the home route, do nothing - this should show nothing
         // else go update
-        if (this.$route.name != 'home') {
-           this.update();
+        const stopId = this.$route.params.value;
+
+        if (stopId) {
+            this.update(stopId);
         }
 
-        console.log('mounted');
     },
     destroyed () {
         clearInterval(this.interval);
     },
     methods: {
-        // TODO: clear up methods a bit, make sure all through update or changeStop
         // TODO: reorder generally as in best practices
-        // TODO: put errors in errorMessage
 
 
         // Update after coming from the router
-        update () {
-            console.log('update', this.$route.params.value);
-            const newId = this.$route.params.value;
-            const stop = this.stops.find((a)=> { return a.value == newId});
+        update (stopId) {
+            const stop = this.stops.find((a)=> { return a.value == stopId});
             if (stop) {
+                window.document.title = "Ruter - " + stop.label;
                 this.getTimes(stop);
             } else {
-                console.log('no such stop found')
                 this.errorMessage = "Oops, looks like that stop ID doesn't exist, or at least I don't have it. Try searching instead.";
 
             }
@@ -192,7 +214,6 @@ export default {
         getStops: function () {
             axios.get('https://reisapi.ruter.no/Line/GetLinesRuterExtended?ruterOperatedOnly=true')
             .then((res) => {
-                console.log(res);
 
                 var allStops = res.data.filter(i => this.transportTypes.has(i['Transportation']));
                 var foundStops = new Set();
@@ -205,13 +226,11 @@ export default {
                             newStops.push({'value': y.Id, 'label': y.Name});
                             foundStops.add(y.Id);
                 }}}
-                console.log(JSON.stringify(newStops));
                 this.stops = newStops;
                 localStorage.setItem('stops', JSON.stringify(newStops));
 
-            }).catch((error) => {
-                // TODO: proper error handling here
-                console.log('error: ', error);
+            }).catch(() => {
+                this.errorMessage = "Looks like something went wrong while fetching the data from Ruter. Try again in a moment or check your connection"
             });
         },
 
@@ -223,37 +242,33 @@ export default {
         // For clicking the refresh button. do nothing if no current stop
         refresh () {
             if (this.currentStop != null) {
-                console.log('refresh: currentid:', this.currentStop)
                 this.getTimes(this.currentStop);
             }
         },
 
         // Get data for a stop. Stop is passed as the {'value': 1234567, 'label': 'Central Station'} object
         getTimes: function (stop) {
-            // TODO: only do if stop is proper format
             this.errorMessage = '';
             this.currentStop = stop;
-            console.log('get time for selected stop', stop.value);
             this.placeholder = stop.label
 
+            if (this.currentFavouriteIndex >= 0) {
+                this.currentIsFavourite = true;
+            } else {
+                this.currentIsFavourite = false;
+            }
+
+            this.setCurrentTime();
+            this.lastUpdated = Date.now();
+
             const path = 'https://reisapi.ruter.no/StopVisit/GetDepartures/' + stop.value;
-            console.log(path);
             axios.get(path)
             .then((response) => {
-                this.setCurrentTime();
-                this.lastUpdated = Date.now();
                 this.formatData(response.data);
-
-                if (this.currentFavouriteIndex >= 0) {
-                    this.currentIsFavourite = true;
-                } else {
-                    this.currentIsFavourite = false;
-                }
-
             })
-            .catch((error) => {
-                console.log('error', error)
-                // TODO: proper error handling here
+            .catch(() => {
+                this.errorMessage = "Looks like something went wrong while fetching the data from Ruter. Try again in a moment or check your connection"
+
             });
         },
 
@@ -307,14 +322,12 @@ export default {
         setFavourite: function () {
             if (this.currentFavouriteIndex == -1) {
                 this.favourites.push(this.currentStop);
-                console.log(this.currentStop);
                 this.currentIsFavourite = true;
                 localStorage.setItem('fav', JSON.stringify(this.favourites));
             }
         },
 
         removeFavourite: function () {
-            console.log('removeFavourite', this.currentFavouriteIndex);
             if ( this.currentFavouriteIndex >= 0 ) {
                 this.favourites.splice(this.currentFavouriteIndex, this.currentFavouriteIndex + 1);
                 this.currentIsFavourite = false;
@@ -325,13 +338,15 @@ export default {
     },
     computed: {
         currentFavouriteIndex () {
-            // TODO: ('error in evaluation') initially. add error handling for this
-            return this.favourites.findIndex((a) => {
-                return a.value == this.currentStop.value;
-            });
+            if (this.currentStop != null) {
+                return this.favourites.findIndex((a) => {
+                    return a.value == this.currentStop.value;
+                });
+            } else {
+                return -1;
+            }
         },
         timeSinceUpdate: function () {
-            // TODO: look at using moment.js for this
 
             if (this.lastUpdated == null) {
                 return 'never updated'
@@ -341,17 +356,17 @@ export default {
             var diff = 0;
 
             diff = Math.floor(seconds / 86400);
-            if (diff > 1) {
+            if (diff >= 1) {
                 return diff + ' days  ago'
             }
 
             diff = Math.floor(seconds / 3600);
-            if (diff > 1) {
+            if (diff >= 1) {
                 return diff + ' hours  ago';
             }
 
             diff = Math.floor(seconds / 60);
-            if (diff > 1) {
+            if (diff >= 1) {
                 return diff + ' minutes  ago';
             }
 
@@ -359,39 +374,33 @@ export default {
         },
     }
 };
-
-
-
 </script>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
+
+#home {
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-.container {
-    max-width: 95%;
+.columns {
+    width: 100%;
+    margin: 0 !important;
+}
+
+.message {
+    max-width: 500px
+}
+
+.main-container {
+    max-width: 100%;
     padding: .5rem;
-    margin-right: auto;
-    margin-left: auto;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    flex: 1 0 auto;
 }
 
 .rounded {
@@ -441,6 +450,42 @@ export default {
 #dropdown-container {
     padding: .5rem !important;
     margin: auto;
+}
+
+.message-header {
+    background-color: #5a5a5a;
+}
+
+.message-body {
+    background-color: #CCCCCC;
+}
+
+.footer {
+  padding: .75rem 1rem .75rem !important;
+  position: relative;
+  bottom: 0;
+  width: 100%;
+  background-color: #5a5a5a !important;
+  color: white !important;
+}
+
+#github-link {
+    margin-left: 0.625rem;
+}
+
+#error-message {
+    margin: 1rem 1rem 1rem;
+}
+
+#message-container {
+    padding: .5rem;
+}
+
+#error-message-body {
+    background-color: #ff0000;
+    color: black;
+    font-weight: bold;
+    border: 0;
 }
 
 </style>

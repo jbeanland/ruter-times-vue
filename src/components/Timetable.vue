@@ -23,7 +23,7 @@
                       </thead>
 
                       <tbody>
-                        <tr v-for='row in data.results'>
+                        <tr v-for='(row, i) in data.results' :key="i">
                             <td>{{ row.MonitoredVehicleJourney.PublishedLineName }}</td>
                             <td>{{ row.MonitoredVehicleJourney.DestinationName }}</td>
                             <td>{{ timeToDeparture(row.minsAway) }}</td>
@@ -80,7 +80,6 @@
 }
 
 .card-header {
-    /*background: #CCCCCC !important;*/
     background: #FF0000E6 !important;
     border-top-right-radius: .25rem !important;
     border-top-left-radius: .25rem !important;
