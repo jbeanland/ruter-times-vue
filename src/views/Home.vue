@@ -1,3 +1,8 @@
+<!-- TODO:
+* make it not crazy ugly.
+* Turn into PWA so I can load it independently of Heroku's servers.
+ -->
+
 <template>
   <div id="home">
 
@@ -9,7 +14,7 @@
 
             <div class='navbar-item'>
                 <div class='field is-grouped'>
-                    <autocomplete :items="stops" v-on:result="getTimes" :placeholder="placeholder"/>
+                    <autocomplete :items="stops" v-on:result="changeStop" :placeholder="placeholder"/>
                     <button @click="refresh">refresh</button>
                 </div>
             </div>
@@ -25,11 +30,14 @@
     <div class='dropdown'>
         <button
             v-for='favourite in favourites'
-            @click="getTimes(favourite)"
+            @click="changeStop(favourite)"
             class='button'
             >{{ favourite.label }}</button>
     </div>
 
+    <div v-if="errorMessage.length > 0">
+        {{ errorMessage }}
+    </div>
 
 
     <div v-for="platform in departureTimes">
@@ -67,12 +75,24 @@ export default {
             currentStop: null,
             currentIsFavourite: false,
             currentDate: Date.now(),
-            placeholder: ''
+            placeholder: '',
+            errorMessage: '',
         };
     },
     components: {
         Timetable,
         Autocomplete,
+    },
+    watch: {
+        '$route' (to, from) {
+            console.log('watching: ', to, from)
+            const newId = this.$route.params.value;
+            const stop = this.stops.find((a)=> { return a.value == newId});
+            if (stop) {
+                this.getTimes(stop);
+            }
+
+        }
     },
     mounted() {
         console.log('mounting');
@@ -95,14 +115,34 @@ export default {
 
         this.interval = setInterval(this.setCurrentTime, 1000);
 
-
+        console.log('params', this.$route.params);
+        console.log('path name', this.$route.name, (this.$route.name == 'home'))
+        if (this.$route.name != 'home') {
+           this.update();
+        }
         console.log('mounted');
-        // console.log('transport types: ', this.transportTypes);
     },
     destroyed () {
         clearInterval(this.interval);
     },
     methods: {
+        // TODO: clear up methods a bit, make sure all through update or changeStop
+        // TODO: deal with method naming
+        // TODO: reorder methods a bit
+        // TODO: reorder general stuff as in best practices
+        // TODO: route errors through errorMessage
+        update () {
+            console.log('update', this.$route.params.value);
+            const newId = this.$route.params.value;
+            const stop = this.stops.find((a)=> { return a.value == newId});
+            if (stop) {
+                this.getTimes(stop);
+            } else {
+                console.log('no such stop found')
+                this.errorMessage = "Oops, looks like that stop ID doesn't exist, or at least I don't have it. Try searching instead.";
+
+            }
+        },
         setCurrentTime() {
             this.currentDate = Date.now();
         },
@@ -135,6 +175,9 @@ export default {
                 console.log('error: ', error);
             });
         },
+        changeStop (stop) {
+            this.$router.push({name: 'stop', params: {value: stop.value}})
+        },
         getStopTimes (stop) {
             this.getTimes(stop);
         },
@@ -146,11 +189,13 @@ export default {
         },
         getTimes: function (stop) {
             // TODO: only do if stop is proper format
+            this.errorMessage = '';
             this.currentStop = stop;
             console.log('get time for selected stop', stop.value);
             this.placeholder = stop.label
 
             const path = 'https://reisapi.ruter.no/StopVisit/GetDepartures/' + stop.value;
+            console.log(path);
             axios.get(path)
             .then((response) => {
                 this.setCurrentTime();
@@ -171,7 +216,13 @@ export default {
         },
         formatData (data) {
             var platforms = [];
-            // const currentDate = new Date();
+
+            // end up with:
+            //      platforms = [{'platform': '1', results: [record 1, record 3, ...]},
+            //                   {'platform': '2', results: [record 2, record 4, ...]},
+            //                  ];
+
+
             for (var i = 0; i < data.length; i++) {
                 var result = data[i];
 
@@ -189,7 +240,6 @@ export default {
                         platforms[ind].results.push(result);
                     }
                     else {
-                        platforms[platform] = [result]
                         platforms.push({
                             'platform': platform,
                             'results': [result],
@@ -198,7 +248,7 @@ export default {
                 }
             }
 
-
+            // sort list of platforms by name and within each platform by time until arrival.
             for (var j = 0; j < platforms.length; j++) {
                 platforms[j].results.sort((a, b) => parseFloat(a.minsAway) - parseFloat(b.minsAway));
             }
@@ -228,6 +278,7 @@ export default {
     },
     computed: {
         currentFavouriteIndex () {
+            // TODO: ('error in evaluation') initially. add error handling for this
             return this.favourites.findIndex((a) => {
                 return a.value == this.currentStop.value;
             });
@@ -258,8 +309,6 @@ export default {
             }
 
             return seconds + ' seconds ago';
-
-            // return 'within the last minute';
         },
     }
 };
