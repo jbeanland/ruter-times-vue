@@ -1,22 +1,27 @@
 <template>
 
-    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 col-xs-12 p-1">
-        <div class="card mb-4 shadow rounded border border-dark">
+    <div class="column">
+        <div class="card rounded shadow main-card">
+
             <div class='card-header'>
-                <p class="lead m-0"  style="text-align:center">
+                <p class="card-header-title"  style="text-align:center">
                     Platform {{ data.platform }}
                 </p>
             </div>
-            <div class='card-body p-2'>
-                <div class="card m-0">
-                    <table class="table">
-                      <thead class='thead-dark'>
+
+            <div class='card-content'>
+                <div class="card rounded">
+
+                    <table class="table is-fullwidth">
+
+                      <thead class='thead'>
                         <tr>
                           <th>Line</th>
                           <th>Destination</th>
                           <th>Time</th>
                         </tr>
                       </thead>
+
                       <tbody>
                         <tr v-for='row in data.results'>
                             <td>{{ row.MonitoredVehicleJourney.PublishedLineName }}</td>
@@ -24,9 +29,12 @@
                             <td>{{ timeToDeparture(row.minsAway) }}</td>
                         </tr>
                       </tbody>
+
                     </table>
+
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -52,3 +60,54 @@
     };
 
 </script>
+
+
+<style scoped>
+
+.container {
+    max-width: 95% !important;
+    padding: .5rem !important;
+    margin-right: auto !important;
+    margin-left: auto !important;
+}
+
+.rounded {
+    border-radius: .25rem !important;
+}
+
+.shadow {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+}
+
+.card-header {
+    background: #CCCCCC !important;
+}
+
+.card-content {
+    padding: 0.625rem
+}
+
+.table {
+    color: white !important;
+    font-weight: bold !important;
+}
+
+thead {
+    background: #CCCCCC !important;
+}
+
+.main-card {
+    background-color: #5a5a5a !important;
+}
+
+tbody {
+    background-color: black !important;
+    /*background-color: #949494 !important;*/
+}
+
+td {
+    border: 0px !important;
+}
+
+
+</style>

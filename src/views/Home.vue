@@ -7,49 +7,84 @@
   <div id="home">
 
     <nav class='navbar' role='navigation' aria-label='main navigation'>
-        <div class='navbar-brand'>
-            <div class='navbar-item'>
-                <img src="@/assets/logo.svg">
-            </div>
+        <div class='fill-space absolute'>
+            <div class='navbar-brand fill-space absolute'>
 
-            <div class='navbar-item'>
-                <div class='field is-grouped'>
-                    <autocomplete :items="stops" @result="changeStop" :placeholder="placeholder"/>
-                    <button @click="refresh">refresh</button>
+                <div class='navbar-item'>
+                    <font-awesome-icon icon="hashtag" size="2x" class="nav-icon"/>
+                </div>
+
+                <div class="fill-space">
+
+                <div class='navbar-item fill-space ' id='main-field'>
+                    <div class='field has-addons fill-space'>
+                        <p class="control is-pulled-right fill-space">
+                            <autocomplete id='input' :items="stops" @result="changeStop" :placeholder="placeholder"/>
+                        </p>
+                        <p class="control ">
+                            <button class="button is-black nav-button" @click="refresh">
+                                <font-awesome-icon icon="sync-alt" size="lg" class="nav-icon"/>
+                            </button>
+                        </p>
+                        <p class="control ">
+
+                            <button v-if="currentIsFavourite" class='button is-black nav-button' @click="removeFavourite">
+                                <font-awesome-icon icon="heart" size="lg" class="nav-icon"/>
+                            </button>
+
+                            <button v-else class='button is-black nav-button' @click='setFavourite'>
+                                <font-awesome-icon :icon="['far', 'heart']" size="lg" class="nav-icon"/>
+                            </button>
+
+                        </p>
+
+                        <p class='control '>
+
+                            <b-dropdown hoverable position="is-bottom-left">
+                                <button class="button is-black nav-button" slot="trigger" id="dropdown-button">
+                                    <span>
+                                        <font-awesome-icon icon="caret-down" size="lg" class="nav-icon"/>
+
+                                    </span>
+                                </button>
+
+                                <b-dropdown-item
+                                    v-for="favourite in favourites"
+                                    @click="changeStop(favourite)"
+                                >{{ favourite.label}}</b-dropdown-item>
+                            </b-dropdown>
+                        </p>
+                    </div>
+                    </div>
                 </div>
             </div>
 
-            <div class='navbar-item'>
-                <button v-if="currentIsFavourite" class='button' @click="removeFavourite">remove favourite</button>
-                <button v-else class='button' @click='setFavourite'>set favourite</button>
-            </div>
 
         </div>
     </nav>
 
-    <div class='dropdown'>
-        <button
-            v-for='favourite in favourites'
-            @click="changeStop(favourite)"
-            class='button'
-            >{{ favourite.label }}</button>
-    </div>
 
     <div v-if="errorMessage.length > 0">
         {{ errorMessage }}
     </div>
 
+    <div class='container'>
+        <div class='columns'>
 
-    <div v-for="platform in departureTimes">
-        <timetable :data="platform"/>
 
+            <div v-for="platform in departureTimes">
+                <timetable :data="platform"/>
+            </div>
+        </div>
     </div>
-
+<!--
     <div>
         <p>
             Last Updated: {{ timeSinceUpdate }}
         </p>
-    </div>
+    </div> -->
+
+
 
 
 
@@ -75,8 +110,9 @@ export default {
             currentStop: null,
             currentIsFavourite: false,
             currentDate: Date.now(),
-            placeholder: '',
+            placeholder: 'Stop...',
             errorMessage: '',
+            dropdownActive: false,
         };
     },
     components: {
@@ -347,19 +383,72 @@ export default {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-#nav {
-  padding: 30px;
-}
-
-#nav a {
-  font-weight: bold;
   color: #2c3e50;
 }
 
-#nav a.router-link-exact-active {
-  color: #42b983;
+.container {
+    max-width: 95%;
+    padding: .5rem;
+    margin-right: auto;
+    margin-left: auto;
 }
+
+.rounded {
+    border-radius: .25rem;
+}
+
+.shadow {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+}
+
+.nav-icon {
+    color: white;
+}
+
+.nav-button {
+    border-color: white !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+#main-field {
+    padding-left: 0px !important;
+    max-width: 500px;
+}
+
+.fill-space {
+    width: 100% !important;
+}
+
+.absolute {
+    position: absolute !important;
+}
+
+#dropdown-button {
+    background-color: black !important;
+    border-color: white !important;
+
+}
+
+#dropdown-container {
+    padding: .5rem !important;
+    margin: auto;
+}
+
+/*#input {
+    min-width:50px!important;
+    max-width:99.99%!important;
+}*/
+
+.row {
+    display: table !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-spacing: 10px !important;
+}
+
+.column {
+    display: table-cell !important;
+
+}
+
 </style>

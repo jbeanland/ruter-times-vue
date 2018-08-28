@@ -1,10 +1,10 @@
 <!-- with help from https://alligator.io/vuejs/vue-autocomplete-component/ -->
 
 <template>
-    <div class='autocomplete'>
+    <div class='autocomplete control'>
         <input
             type="text"
-            class='input'
+            class='input is-expanded'
             @input="onChange"
             v-model='search'
             @keydown.down="onArrowDown"
@@ -178,11 +178,12 @@ export default {
         padding: 0;
         margin: 0;
         border: 1px solid #eeeeee;
-        height: 120px;
+        height: auto;
         overflow:auto;
         position: absolute;
         background-color: #f8f8f8;
         z-index: 10;
+        width: auto;
     }
 
     .autocomplete-result {
@@ -197,4 +198,5 @@ export default {
         background-color: #4AAE9B;
         color: white;
     }
+
 </style>
