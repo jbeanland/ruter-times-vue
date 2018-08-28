@@ -14,7 +14,7 @@
 
             <div class='navbar-item'>
                 <div class='field is-grouped'>
-                    <autocomplete :items="stops" v-on:result="changeStop" :placeholder="placeholder"/>
+                    <autocomplete :items="stops" @result="changeStop" :placeholder="placeholder"/>
                     <button @click="refresh">refresh</button>
                 </div>
             </div>
@@ -70,7 +70,7 @@ export default {
             favourites: [],
             lastUpdated: null,
             transportTypes: new Set([2, 8]),
-            newStop: '',
+            // newStop: '',
             departureTimes: [],
             currentStop: null,
             currentIsFavourite: false,
@@ -85,41 +85,44 @@ export default {
     },
     watch: {
         '$route' (to, from) {
-            console.log('watching: ', to, from)
             const newId = this.$route.params.value;
             const stop = this.stops.find((a)=> { return a.value == newId});
             if (stop) {
                 this.getTimes(stop);
             }
-
         }
     },
     mounted() {
         console.log('mounting');
+
+        // get stops from localstorage or from api
         var s = localStorage.getItem('stops')
         if (s) {
             this.stops = JSON.parse(s);
-            console.log('from localStorage');
+            console.log('get stops from localStorage');
             // TODO: refresh stops every n days.
             // TODO: store transport types wanted alongside so the user can select what they want, refresh when different to chosen options.
         }
         else {
             console.log('get stops fresh');
-            this.getStopsFresh();
+            this.getStops();
         }
 
+        // get favourites from localstorage
         var fav = JSON.parse(localStorage.getItem('fav'))
         if (fav != null) {
             this.favourites = fav;
         }
 
+        // setup currentTime callback
         this.interval = setInterval(this.setCurrentTime, 1000);
 
-        console.log('params', this.$route.params);
-        console.log('path name', this.$route.name, (this.$route.name == 'home'))
+        // if it is the home route, do nothing - this should show nothing
+        // else go update
         if (this.$route.name != 'home') {
            this.update();
         }
+
         console.log('mounted');
     },
     destroyed () {
@@ -127,10 +130,11 @@ export default {
     },
     methods: {
         // TODO: clear up methods a bit, make sure all through update or changeStop
-        // TODO: deal with method naming
-        // TODO: reorder methods a bit
-        // TODO: reorder general stuff as in best practices
-        // TODO: route errors through errorMessage
+        // TODO: reorder generally as in best practices
+        // TODO: put errors in errorMessage
+
+
+        // Update after coming from the router
         update () {
             console.log('update', this.$route.params.value);
             const newId = this.$route.params.value;
@@ -146,11 +150,9 @@ export default {
         setCurrentTime() {
             this.currentDate = Date.now();
         },
-        getStops: function () {
-            console.log('get stops from local or server');
 
-        },
-        getStopsFresh: function () {
+        // Go get transport stops from the api.
+        getStops: function () {
             axios.get('https://reisapi.ruter.no/Line/GetLinesRuterExtended?ruterOperatedOnly=true')
             .then((res) => {
                 console.log(res);
@@ -175,18 +177,21 @@ export default {
                 console.log('error: ', error);
             });
         },
+
+        // push new stop to the router
         changeStop (stop) {
             this.$router.push({name: 'stop', params: {value: stop.value}})
         },
-        getStopTimes (stop) {
-            this.getTimes(stop);
-        },
+
+        // For clicking the refresh button. do nothing if no current stop
         refresh () {
             if (this.currentStop != null) {
                 console.log('refresh: currentid:', this.currentStop)
                 this.getTimes(this.currentStop);
             }
         },
+
+        // Get data for a stop. Stop is passed as the {'value': 1234567, 'label': 'Central Station'} object
         getTimes: function (stop) {
             // TODO: only do if stop is proper format
             this.errorMessage = '';
@@ -214,6 +219,9 @@ export default {
                 // TODO: proper error handling here
             });
         },
+
+        // Take raw data from api and format it. Specifically:
+        //  sort each result by platform and add a field for how far away in minutes it is
         formatData (data) {
             var platforms = [];
 
@@ -258,6 +266,7 @@ export default {
             this.departureTimes = platforms;
 
         },
+
         setFavourite: function () {
             if (this.currentFavouriteIndex == -1) {
                 this.favourites.push(this.currentStop);
@@ -266,6 +275,7 @@ export default {
                 localStorage.setItem('fav', JSON.stringify(this.favourites));
             }
         },
+
         removeFavourite: function () {
             console.log('removeFavourite', this.currentFavouriteIndex);
             if ( this.currentFavouriteIndex >= 0 ) {
@@ -284,6 +294,7 @@ export default {
             });
         },
         timeSinceUpdate: function () {
+            // TODO: look at using moment.js for this
 
             if (this.lastUpdated == null) {
                 return 'never updated'
@@ -291,7 +302,6 @@ export default {
 
             var seconds = Math.floor((this.currentDate - this.lastUpdated) / 1000);
             var diff = 0;
-            // console.log('timeSinceUpdate:', seconds)
 
             diff = Math.floor(seconds / 86400);
             if (diff > 1) {
