@@ -5,72 +5,7 @@
  -->
 
 <template>
-  <div id="home">
-
-<!--     <nav class='navbar' role='navigation' aria-label='main navigation'>
-        <div class='fill-space absolute'>
-            <div class='navbar-brand fill-space absolute'>
-
-                <div class='navbar-item'>
-                    <font-awesome-icon icon="hashtag" size="2x" class="red"/>
-                </div>
-
-                <div class="fill-space">
-
-                    <div class='navbar-item fill-space ' id='main-field'>
-                        <div class='field has-addons fill-space'>
-                            <p class="control is-pulled-right fill-space">
-                                 <b-autocomplete
-                                    id='input'
-                                    v-model="search"
-                                    :placeholder="placeholder"
-                                    :clear-on-select=true
-                                    :data="filteredData"
-                                    field="label"
-                                    @select="changeStop">
-                                </b-autocomplete>
-                            </p>
-                            <p class="control ">
-                                <button class="button is-black nav-button" id='refresh-button' @click="refresh">
-                                    <font-awesome-icon icon="sync-alt" size="lg" class="green" :spin="spin"/>
-                                </button>
-                            </p>
-                            <p class="control ">
-
-                                <button v-if="currentIsFavourite" class='button is-black nav-button white' @click="removeFavourite">
-                                    <font-awesome-icon icon="heart" size="lg" class="red"/>
-                                </button>
-
-                                <button v-else class='button is-black white nav-button' @click='setFavourite'>
-                                    <font-awesome-icon :icon="['far', 'heart']" size="lg" class="white"/>
-                                </button>
-
-                            </p>
-
-                            <p class='control '>
-
-                                <b-dropdown :mobile-modal=false position="is-bottom-left">
-                                    <button class="button is-black nav-button" slot="trigger" id="dropdown-button">
-                                        <span>
-                                            <font-awesome-icon icon="caret-down" size="lg" class="white"/>
-
-                                        </span>
-                                    </button>
-
-                                    <b-dropdown-item
-                                        v-for="(favourite, i) in favourites"
-                                        :key="i"
-                                        @click="changeStop(favourite)"
-                                    >{{ favourite.label}}</b-dropdown-item>
-                                </b-dropdown>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav> -->
-
+<div id="home">
 
     <navbar-main
         :stops="stops"
@@ -78,12 +13,12 @@
         :favourites="favourites"
         :placeholder="placeholder"
         :currentIsFavourite="currentIsFavourite"
+        :isLoading="isLoading"
         @refresh="refresh"
+        @change-stop="changeStop"
         @remove-favourite="removeFavourite"
         @set-favourite="setFavourite"
-        @change-stop="changeStop"
     ></navbar-main>
-
 
 
     <div id="message-container" v-if="errorMessage.length > 0">
@@ -94,13 +29,11 @@
         </article>
     </div>
 
+
     <div class='container main-container'>
         <div class='columns is-multiline'>
 
-
             <timetable v-for="(platform, i) in departureTimes" :key="i" :data="platform"/>
-
-
 
             <div class='column'>
                 <article class="message is-small">
@@ -112,25 +45,25 @@
                     </div>
                 </article>
             </div>
+
         </div>
     </div>
 
+    <footer-main/>
 
-
-
-  </div>
+</div>
 </template>
 
 
 
 <script>
 import Timetable from '@/components/Timetable.vue'
-import Autocomplete from '@/components/Autocomplete.vue'
 import FooterMain from '@/components/FooterMain.vue'
 import NavbarMain from '@/components/NavbarMain.vue'
 import axios from 'axios'
 
 export default {
+    name: 'main-view',
     data() {
         return {
             stops: [],
@@ -139,26 +72,14 @@ export default {
             transportTypes: new Set([2, 8]),
             departureTimes: [],
             currentStop: null,
-            currentIsFavourite: false,
             currentDate: Date.now(),
             placeholder: 'Stop...',
             errorMessage: '',
-            input: '',
-            accentMap: {
-                "ø": "o",
-                "Ø": "o",
-                "æ": "ae",
-                "Æ": "ae",
-                "å": "a",
-                "Å": "a",
-            },
-            search: '',
-            spin: false,
+            isLoading: false,
         };
     },
     components: {
         Timetable,
-        Autocomplete,
         FooterMain,
         NavbarMain,
     },
@@ -171,26 +92,15 @@ export default {
                 window.document.title = "Ruter times"
                 this.lastUpdated = null;
                 this.currentStop = null;
-                this.currentIsFavourite = false;
                 this.errorMessage = '';
                 this.placeholder = 'Stop...'
                 this.departureTimes = [];
-
             }
         }
     },
     mounted() {
 
-        // get stops from localstorage or from api
-        var s = localStorage.getItem('stops')
-        if (s) {
-            this.stops = JSON.parse(s);
-            // TODO: refresh stops every n days.
-            // TODO: store transport types wanted alongside so the user can select what they want, refresh when different to chosen options.
-        }
-        else {
-            this.getStops();
-        }
+        this.getStops();
 
         // get favourites from localstorage
         var fav = JSON.parse(localStorage.getItem('fav'))
@@ -199,12 +109,10 @@ export default {
         }
 
         // setup currentTime callback
-        this.interval = setInterval(this.setCurrentTime, 1000);
+        this.interval = setInterval(() => { this.currentDate = Date.now(); }, 1000);
 
-        // if it is the home route, do nothing - this should show nothing
-        // else go update
+        // if it is the home route, do nothing - this should show nothing, else perform update.
         const stopId = this.$route.params.value;
-
         if (stopId) {
             this.update(stopId);
         }
@@ -216,43 +124,21 @@ export default {
     methods: {
         // TODO: reorder generally as in best practices
 
-        selected (item) {
-            // console.log('selected', JSON.stringify(item));
-            this.getTimes(item);
-        },
-
-        normalise( term ) {
-          var ret = "";
-          for ( var i = 0; i < term.length; i++ ) {
-            ret += this.accentMap[ term.charAt(i) ] || term.charAt(i);
-          }
-          return ret.toLowerCase();
-        },
-
-        // Update after coming from the router
-        update (stopId) {
-            // this.search = ''
-            // this.errorMessage = this.errorMessage + 'in update start\n'
-
-            const stop = this.stops.find((a)=> { return a.value == stopId});
-
-            // this.errorMessage = this.errorMessage + 'in update start' + stop.value + ' ' + stop.label + '\n';
-
-            if (stop) {
-                window.document.title = "Ruter - " + stop.label;
-                // this.errorMessage = this.errorMessage + 'in Update end\n';
-                this.getTimes(stop);
-            } else {
-                this.errorMessage = "Oops, looks like that stop ID doesn't exist, or at least I don't have it. Try searching instead.";
-
+        getStops () {
+            // get stops from localstorage or from api
+            var s = localStorage.getItem('stops')
+            if (s) {
+                this.stops = JSON.parse(s);
+                // TODO: refresh stops every n days.
+                // TODO: store transport types wanted alongside so the user can select what they want, refresh when different to chosen options.
+            }
+            else {
+                this.getStopsFresh();
             }
         },
-        setCurrentTime() {
-            this.currentDate = Date.now();
-        },
 
-        // Go get transport stops from the api.
-        getStops: function () {
+        getStopsFresh: function () {
+            // Go get transport stops from the api.
             axios.get('https://reisapi.ruter.no/Line/GetLinesRuterExtended?ruterOperatedOnly=true')
             .then((res) => {
 
@@ -275,62 +161,64 @@ export default {
             });
         },
 
-        // push new stop to the router
         changeStop (stop) {
+            // push new stop to the router
             if (stop) {
-                // this.search = '';
                 this.$router.push({name: 'stop', params: {value: stop.value}})
-                // this.search = '';
             }
         },
 
-        // For clicking the refresh button. do nothing if no current stop
+        update (stopId) {
+            // Update after coming from the router
+            const stop = this.stops.find((a)=> { return a.value == stopId});
+
+            if (stop) {
+                window.document.title = "Ruter - " + stop.label;
+                this.getTimes(stop);
+            } else {
+                this.errorMessage = "Oops, looks like that stop ID doesn't exist, or at least I don't have it. Try searching instead.";
+            }
+        },
+
         refresh () {
-            console.log('refresh');
+            // For clicking the refresh button. do nothing if no current stop
             if (this.currentStop != null) {
                 this.getTimes(this.currentStop);
             }
         },
 
-        // Get data for a stop. Stop is passed as the {'value': 1234567, 'label': 'Central Station'} object
         getTimes: function (stop) {
+            // Get data for a stop. Stop is passed as the {'value': 1234567, 'label': 'Central Station'} object
             this.currentStop = stop;
             this.placeholder = stop.label
-
-            if (this.currentFavouriteIndex >= 0) {
-                this.currentIsFavourite = true;
-            } else {
-                this.currentIsFavourite = false;
-            }
-
-            this.spin = true;
-
+            this.isLoading = true;
 
             const path = 'https://reisapi.ruter.no/StopVisit/GetDepartures/' + stop.value;
             axios.get(path)
             .then((response) => {
-                this.spin = false;
-                this.setCurrentTime();
-                this.lastUpdated = Date.now();
-                this.formatData(response.data);
+                this.formatTimes(response.data);
+                // TODO: if no data (eg middle of night so no trains) give some warning message - not broken just empty. need new div for warning instead of error
             })
             .catch(() => {
-                this.spin = false;
                 this.errorMessage = "Looks like something went wrong while fetching the data from Ruter. Try again in a moment or check your connection"
 
+            })
+            .then(() => {
+                this.isLoading = false;
+                this.currentDate = Date.now();
+                this.lastUpdated = Date.now();
             });
         },
 
-        // Take raw data from api and format it. Specifically:
-        //  sort each result by platform and add a field for how far away in minutes it is
-        formatData (data) {
-            var platforms = [];
-
-            // end up with:
+        formatTimes (data) {
+            // Take raw data from api and format it. Specifically:
+            //   sort each result by platform and add a field for how far away in minutes it is.
+            // End up with:
             //      platforms = [{'platform': '1', results: [record 1, record 3, ...]},
             //                   {'platform': '2', results: [record 2, record 4, ...]},
             //                  ];
 
+            var platforms = [];
 
             for (var i = 0; i < data.length; i++) {
                 var result = data[i];
@@ -371,7 +259,6 @@ export default {
         setFavourite: function () {
             if (this.currentFavouriteIndex == -1) {
                 this.favourites.push(this.currentStop);
-                this.currentIsFavourite = true;
                 localStorage.setItem('fav', JSON.stringify(this.favourites));
             }
         },
@@ -379,7 +266,6 @@ export default {
         removeFavourite: function () {
             if ( this.currentFavouriteIndex >= 0 ) {
                 this.favourites.splice(this.currentFavouriteIndex, this.currentFavouriteIndex + 1);
-                this.currentIsFavourite = false;
                 localStorage.setItem('fav', JSON.stringify(this.favourites));
             }
         },
@@ -395,7 +281,7 @@ export default {
                 return -1;
             }
         },
-        currentisFavouriteTODO () {
+        currentIsFavourite () {
             if (this.currentFavouriteIndex >= 0) {
                 return true;
             } else {
@@ -413,29 +299,31 @@ export default {
 
             diff = Math.floor(seconds / 86400);
             if (diff >= 1) {
-                return diff + ' days  ago'
+                if (diff == 1) {
+                    return "Yesterday";
+                }
+                return diff + ' days  ago';
             }
 
             diff = Math.floor(seconds / 3600);
             if (diff >= 1) {
+                if (diff == 1) {
+                    return "1 hour ago";
+                }
                 return diff + ' hours  ago';
             }
 
             diff = Math.floor(seconds / 60);
             if (diff >= 1) {
+                if (diff == 1) {
+                    return "1 minute ago";
+                }
                 return diff + ' minutes  ago';
             }
 
             return seconds + ' seconds ago';
         },
-        filteredData () {
-            if (this.search.length < 3) {
-                return [];
-            } else {
-                return this.stops.filter(item => this.normalise(item.label).indexOf(this.normalise(this.search)) > -1);
-            }
-        },
-    }
+    },
 };
 </script>
 
@@ -443,7 +331,6 @@ export default {
 <style>
 
 #home {
-
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -454,10 +341,6 @@ export default {
     margin: 0 !important;
 }
 
-.message {
-    max-width: 500px
-}
-
 .main-container {
     max-width: 100%;
     padding: .5rem;
@@ -466,58 +349,8 @@ export default {
     flex: 1 0 auto;
 }
 
-.rounded {
-    border-radius: .25rem !important;
-}
-
-.shadow {
-    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
-}
-
-.white {
-    color: white;
-}
-
-.red {
-    color: #FF0000E6;
-}
-
-.green {
-    color: #30B000;
-}
-
-.nav-button {
-    border-color: white !important;
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-}
-
-#refresh-button {
-    border-left-width: 0 !important;
-}
-
-#main-field {
-    padding-left: 0px !important;
-    max-width: 500px;
-}
-
-.fill-space {
-    width: 100% !important;
-}
-
-.absolute {
-    position: absolute !important;
-}
-
-#dropdown-button {
-    background-color: black !important;
-    border-color: white !important;
-
-}
-
-#dropdown-container {
-    padding: .5rem !important;
-    margin: auto;
+.message {
+    max-width: 500px
 }
 
 .message-header {
@@ -528,12 +361,12 @@ export default {
     background-color: #CCCCCC;
 }
 
-#error-message {
-    margin: 1rem 1rem 1rem;
-}
-
 #message-container {
     padding: .5rem;
+}
+
+#error-message {
+    margin: 1rem 1rem 1rem;
 }
 
 #error-message-body {

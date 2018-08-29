@@ -5,10 +5,9 @@
             <p>
                 <span class="text-muted">By Jack Beanland, 2018.
                     <a href="https://github.com/jbeanland/ruter-times-vue" id='github-link'>
-                                <font-awesome-icon :icon="['fab', 'github']" class="white"/>
-                </a>
+                        <font-awesome-icon :icon="['fab', 'github']" class="white"/>
+                    </a>
                 </span>
-
             </p>
         </div>
     </footer>
