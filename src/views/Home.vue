@@ -101,20 +101,6 @@
     </div>
 
 
-    <footer class="footer">
-        <div class="content has-text-centered">
-            <p>
-                <span class="text-muted">By Jack Beanland, 2018.
-                    <a href="https://github.com/jbeanland/ruter-times-vue" id='github-link'>
-                                <font-awesome-icon :icon="['fab', 'github']" class="white"/>
-                </a>
-                </span>
-
-            </p>
-        </div>
-    </footer>
-
-
 
 
   </div>
@@ -125,6 +111,7 @@
 <script>
 import Timetable from '@/components/Timetable.vue'
 import Autocomplete from '@/components/Autocomplete.vue'
+import FooterMain from '@/components/FooterMain.vue'
 import axios from 'axios'
 
 export default {
@@ -156,6 +143,7 @@ export default {
     components: {
         Timetable,
         Autocomplete,
+        FooterMain,
     },
     watch: {
         '$route' () {
@@ -517,19 +505,6 @@ export default {
 
 .message-body {
     background-color: #CCCCCC;
-}
-
-.footer {
-  padding: .75rem 1rem .75rem !important;
-  position: relative;
-  bottom: 0;
-  width: 100%;
-  background-color: #5a5a5a !important;
-  color: white !important;
-}
-
-#github-link {
-    margin-left: 0.625rem;
 }
 
 #error-message {

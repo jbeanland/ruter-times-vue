@@ -1,8 +1,21 @@
 <template>
   <div id="app">
     <router-view/>
+
+    <footer-main/>
   </div>
 </template>
+
+<script>
+import FooterMain from '@/components/FooterMain.vue'
+
+export default {
+  components: {
+    FooterMain,
+  }
+};
+
+</script>
 
 <style>
 #app {
