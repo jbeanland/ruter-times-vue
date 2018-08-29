@@ -1,5 +1,6 @@
 <!-- TODO:
 * Turn into PWA so I can load it independently of Heroku's servers.
+* put refresh button on each platform and save scroll position.
  -->
 
 <template>
@@ -29,7 +30,7 @@
                             </b-autocomplete>
                         </p>
                         <p class="control ">
-                            <button class="button is-black nav-button" @click="refresh">
+                            <button class="button is-black nav-button" id='refresh-button' @click="refresh">
                                 <font-awesome-icon icon="sync-alt" size="lg" class="green"/>
                             </button>
                         </p>
@@ -486,6 +487,11 @@ export default {
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
 }
+
+#refresh-button {
+    border-left-width: 0 !important;
+}
+
 #main-field {
     padding-left: 0px !important;
     max-width: 500px;
