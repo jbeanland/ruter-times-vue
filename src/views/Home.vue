@@ -197,13 +197,18 @@ export default {
 
         // Update after coming from the router
         update (stopId) {
+            this.errorMessage = this.errorMessage + 'in update start\n'
+
             const stop = this.stops.find((a)=> { return a.value == stopId});
+
+            this.errorMessage = this.errorMessage + 'in update start' + stop.value + ' ' + stop.label + '\n';
+
             if (stop) {
                 window.document.title = "Ruter - " + stop.label;
-                this.errorMessage = this.errorMessage + 'in Update\n'
+                this.errorMessage = this.errorMessage + 'in Update end\n';
                 this.getTimes(stop);
             } else {
-                this.errorMessage = "Oops, looks like that stop ID doesn't exist, or at least I don't have it. Try searching instead.";
+                this.errorMessage = this.errorMessage + "Oops, looks like that stop ID doesn't exist, or at least I don't have it. Try searching instead.\n";
 
             }
         },
