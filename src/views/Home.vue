@@ -47,7 +47,7 @@
 
                         <p class='control '>
 
-                            <b-dropdown hoverable position="is-bottom-left">
+                            <b-dropdown :mobile-modal=false position="is-bottom-left">
                                 <button class="button is-black nav-button" slot="trigger" id="dropdown-button">
                                     <span>
                                         <font-awesome-icon icon="caret-down" size="lg" class="white"/>
@@ -233,7 +233,7 @@ export default {
 
         // Update after coming from the router
         update (stopId) {
-            this.search = ''
+            // this.search = ''
             // this.errorMessage = this.errorMessage + 'in update start\n'
 
             const stop = this.stops.find((a)=> { return a.value == stopId});
@@ -280,9 +280,9 @@ export default {
         // push new stop to the router
         changeStop (stop) {
             if (stop) {
-                this.search = '';
+                // this.search = '';
                 this.$router.push({name: 'stop', params: {value: stop.value}})
-                this.search = '';
+                // this.search = '';
             }
         },
 
