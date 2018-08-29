@@ -18,7 +18,7 @@
                 <div class='navbar-item fill-space ' id='main-field'>
                     <div class='field has-addons fill-space'>
                         <p class="control is-pulled-right fill-space">
-                            <autocomplete id='input' @input('setInput') :items="stops" @result="changeStop" :placeholder="placeholder"/>
+                            <autocomplete id='input' :items="stops" @input="setInput" @result="changeStop" :placeholder="placeholder"/>
                         </p>
                         <p class="control ">
                             <button class="button is-black nav-button" @click="refresh">
