@@ -17,65 +17,59 @@
 
                 <div class="fill-space">
 
-                <div class='navbar-item fill-space ' id='main-field'>
-                    <div class='field has-addons fill-space'>
-                        <p class="control is-pulled-right fill-space">
-                             <b-autocomplete
-                                id='input'
-                                v-model="search"
-                                :placeholder="placeholder"
-                                :clear-on-select=true
-                                :data="filteredData"
-                                field="label"
-                                @select="changeStop">
-                            </b-autocomplete>
-                        </p>
-                        <p class="control ">
-                            <button class="button is-black nav-button" id='refresh-button' @click="refresh">
-                                <font-awesome-icon icon="sync-alt" size="lg" class="green"/>
-                            </button>
-                        </p>
-                        <p class="control ">
+                    <div class='navbar-item fill-space ' id='main-field'>
+                        <div class='field has-addons fill-space'>
+                            <p class="control is-pulled-right fill-space">
+                                 <b-autocomplete
+                                    id='input'
+                                    v-model="search"
+                                    :placeholder="placeholder"
+                                    :clear-on-select=true
+                                    :data="filteredData"
+                                    field="label"
+                                    @select="changeStop">
+                                </b-autocomplete>
+                            </p>
+                            <p class="control ">
+                                <button class="button is-black nav-button" id='refresh-button' @click="refresh">
+                                    <font-awesome-icon icon="sync-alt" size="lg" class="green" :spin="spin"/>
+                                </button>
+                            </p>
+                            <p class="control ">
 
-                            <button v-if="currentIsFavourite" class='button is-black nav-button white' @click="removeFavourite">
-                                <font-awesome-icon icon="heart" size="lg" class="red"/>
-                            </button>
-
-                            <button v-else class='button is-black white nav-button' @click='setFavourite'>
-                                <font-awesome-icon :icon="['far', 'heart']" size="lg" class="white"/>
-                            </button>
-
-                        </p>
-
-                        <p class='control '>
-
-                            <b-dropdown :mobile-modal=false position="is-bottom-left">
-                                <button class="button is-black nav-button" slot="trigger" id="dropdown-button">
-                                    <span>
-                                        <font-awesome-icon icon="caret-down" size="lg" class="white"/>
-
-                                    </span>
+                                <button v-if="currentIsFavourite" class='button is-black nav-button white' @click="removeFavourite">
+                                    <font-awesome-icon icon="heart" size="lg" class="red"/>
                                 </button>
 
-                                <b-dropdown-item
-                                    v-for="(favourite, i) in favourites"
-                                    :key="i"
-                                    @click="changeStop(favourite)"
-                                >{{ favourite.label}}</b-dropdown-item>
-                            </b-dropdown>
-                        </p>
-                    </div>
+                                <button v-else class='button is-black white nav-button' @click='setFavourite'>
+                                    <font-awesome-icon :icon="['far', 'heart']" size="lg" class="white"/>
+                                </button>
+
+                            </p>
+
+                            <p class='control '>
+
+                                <b-dropdown :mobile-modal=false position="is-bottom-left">
+                                    <button class="button is-black nav-button" slot="trigger" id="dropdown-button">
+                                        <span>
+                                            <font-awesome-icon icon="caret-down" size="lg" class="white"/>
+
+                                        </span>
+                                    </button>
+
+                                    <b-dropdown-item
+                                        v-for="(favourite, i) in favourites"
+                                        :key="i"
+                                        @click="changeStop(favourite)"
+                                    >{{ favourite.label}}</b-dropdown-item>
+                                </b-dropdown>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
-
-
         </div>
     </nav>
-
-    <p class='white'> {{ input }}</p>
-
-
 
     <div id="message-container" v-if="errorMessage.length > 0">
         <article class="message" id="error-message">
@@ -156,6 +150,7 @@ export default {
                 "Å": "a",
             },
             search: '',
+            spin: false,
         };
     },
     components: {
@@ -297,8 +292,6 @@ export default {
 
         // Get data for a stop. Stop is passed as the {'value': 1234567, 'label': 'Central Station'} object
         getTimes: function (stop) {
-            // console.log('getTimes: ', stop.value, stop.label);
-            // this.errorMessage = this.errorMessage + 'in getTimes\n'
             this.currentStop = stop;
             this.placeholder = stop.label
 
@@ -308,18 +301,19 @@ export default {
                 this.currentIsFavourite = false;
             }
 
-            this.setCurrentTime();
-            this.lastUpdated = Date.now();
+            this.spin = true;
+
 
             const path = 'https://reisapi.ruter.no/StopVisit/GetDepartures/' + stop.value;
-            // console.log('path', path);
             axios.get(path)
             .then((response) => {
-                // console.log('response received');
-                // this.errorMessage = this.errorMessage + 'got response\n'
+                this.spin = false;
+                this.setCurrentTime();
+                this.lastUpdated = Date.now();
                 this.formatData(response.data);
             })
             .catch(() => {
+                this.spin = false;
                 this.errorMessage = "Looks like something went wrong while fetching the data from Ruter. Try again in a moment or check your connection"
 
             });
