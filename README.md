@@ -8,3 +8,5 @@ The original used a Flask backend to get and format data from the [Ruter API](ht
 
 Styling from [Bulma](https://bulma.io/), [Buefy](https://buefy.github.io/#/) and [Font Awesome](https://fontawesome.com/).
 
+
+Currently hosted [on Heroku](https://ruter-times.herokuapp.com/).

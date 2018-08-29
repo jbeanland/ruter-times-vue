@@ -1,6 +1,7 @@
 <!-- TODO:
 * Turn into PWA so I can load it independently of Heroku's servers.
 * put refresh button on each platform and save scroll position.
+* force https
  -->
 
 <template>
