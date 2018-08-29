@@ -7,7 +7,7 @@
 <template>
   <div id="home">
 
-    <nav class='navbar' role='navigation' aria-label='main navigation'>
+<!--     <nav class='navbar' role='navigation' aria-label='main navigation'>
         <div class='fill-space absolute'>
             <div class='navbar-brand fill-space absolute'>
 
@@ -69,7 +69,22 @@
                 </div>
             </div>
         </div>
-    </nav>
+    </nav> -->
+
+
+    <navbar-main
+        :stops="stops"
+        :currentStop="currentStop"
+        :favourites="favourites"
+        :placeholder="placeholder"
+        :currentIsFavourite="currentIsFavourite"
+        @refresh="refresh"
+        @remove-favourite="removeFavourite"
+        @set-favourite="setFavourite"
+        @change-stop="changeStop"
+    ></navbar-main>
+
+
 
     <div id="message-container" v-if="errorMessage.length > 0">
         <article class="message" id="error-message">
@@ -112,6 +127,7 @@
 import Timetable from '@/components/Timetable.vue'
 import Autocomplete from '@/components/Autocomplete.vue'
 import FooterMain from '@/components/FooterMain.vue'
+import NavbarMain from '@/components/NavbarMain.vue'
 import axios from 'axios'
 
 export default {
@@ -144,6 +160,7 @@ export default {
         Timetable,
         Autocomplete,
         FooterMain,
+        NavbarMain,
     },
     watch: {
         '$route' () {
@@ -202,10 +219,6 @@ export default {
         selected (item) {
             // console.log('selected', JSON.stringify(item));
             this.getTimes(item);
-        },
-
-        setInput (inp) {
-            this.input = inp;
         },
 
         normalise( term ) {
@@ -273,6 +286,7 @@ export default {
 
         // For clicking the refresh button. do nothing if no current stop
         refresh () {
+            console.log('refresh');
             if (this.currentStop != null) {
                 this.getTimes(this.currentStop);
             }
@@ -379,6 +393,13 @@ export default {
                 });
             } else {
                 return -1;
+            }
+        },
+        currentisFavouriteTODO () {
+            if (this.currentFavouriteIndex >= 0) {
+                return true;
+            } else {
+                return false;
             }
         },
         timeSinceUpdate: function () {
