@@ -199,7 +199,6 @@ export default {
         update (stopId) {
             const stop = this.stops.find((a)=> { return a.value == stopId});
             if (stop) {
-                // console.log('update: ' + stopId);
                 window.document.title = "Ruter - " + stop.label;
                 this.getTimes(stop);
             } else {
@@ -249,7 +248,6 @@ export default {
 
         // Get data for a stop. Stop is passed as the {'value': 1234567, 'label': 'Central Station'} object
         getTimes: function (stop) {
-            // console.log('getTimes', stop.value, stop.label);
             this.errorMessage = '';
             this.currentStop = stop;
             this.placeholder = stop.label
@@ -266,7 +264,6 @@ export default {
             const path = 'https://reisapi.ruter.no/StopVisit/GetDepartures/' + stop.value;
             axios.get(path)
             .then((response) => {
-                // console.log('response through');
                 this.formatData(response.data);
             })
             .catch(() => {
