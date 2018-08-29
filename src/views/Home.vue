@@ -169,7 +169,6 @@ export default {
         else {
             this.getStops();
         }
-        console.log('mounted' + this.stops)
 
         // get favourites from localstorage
         var fav = JSON.parse(localStorage.getItem('fav'))
@@ -198,11 +197,10 @@ export default {
 
         // Update after coming from the router
         update (stopId) {
-            console.log('update' + stopId);
             const stop = this.stops.find((a)=> { return a.value == stopId});
             if (stop) {
+                console.log('update: ' + stopId)
                 window.document.title = "Ruter - " + stop.label;
-                this.errorMessage = "in Update\n"
                 this.getTimes(stop);
             } else {
                 this.errorMessage = "Oops, looks like that stop ID doesn't exist, or at least I don't have it. Try searching instead.";
@@ -251,8 +249,8 @@ export default {
 
         // Get data for a stop. Stop is passed as the {'value': 1234567, 'label': 'Central Station'} object
         getTimes: function (stop) {
-            this.errorMessage = this.errorMessage + 'in getTimes()';
-            console.log('in getTimes')
+            console.log('getTimes', stop.value, stop.label)
+            this.errorMessage = '';
             this.currentStop = stop;
             this.placeholder = stop.label
 
@@ -268,7 +266,7 @@ export default {
             const path = 'https://reisapi.ruter.no/StopVisit/GetDepartures/' + stop.value;
             axios.get(path)
             .then((response) => {
-                this.errorMessage = '';
+                console.log('response through')
                 this.formatData(response.data);
             })
             .catch(() => {
