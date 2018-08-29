@@ -18,7 +18,15 @@
                 <div class='navbar-item fill-space ' id='main-field'>
                     <div class='field has-addons fill-space'>
                         <p class="control is-pulled-right fill-space">
-                            <autocomplete id='input' :items="stops" @input="setInput" @result="changeStop" :placeholder="placeholder"/>
+                             <b-autocomplete
+                                id='input'
+                                v-model="search"
+                                :placeholder="placeholder"
+                                :clear-on-select=true
+                                :data="filteredData"
+                                field="label"
+                                @select="changeStop">
+                            </b-autocomplete>
                         </p>
                         <p class="control ">
                             <button class="button is-black nav-button" @click="refresh">
@@ -137,6 +145,15 @@ export default {
             placeholder: 'Stop...',
             errorMessage: '',
             input: '',
+            accentMap: {
+                "ø": "o",
+                "Ø": "o",
+                "æ": "ae",
+                "Æ": "ae",
+                "å": "a",
+                "Å": "a",
+            },
+            search: '',
         };
     },
     components: {
@@ -197,25 +214,38 @@ export default {
     methods: {
         // TODO: reorder generally as in best practices
 
+        selected (item) {
+            // console.log('selected', JSON.stringify(item));
+            this.getTimes(item);
+        },
+
         setInput (inp) {
             this.input = inp;
         },
 
+        normalise( term ) {
+          var ret = "";
+          for ( var i = 0; i < term.length; i++ ) {
+            ret += this.accentMap[ term.charAt(i) ] || term.charAt(i);
+          }
+          return ret.toLowerCase();
+        },
 
         // Update after coming from the router
         update (stopId) {
-            this.errorMessage = this.errorMessage + 'in update start\n'
+            this.search = ''
+            // this.errorMessage = this.errorMessage + 'in update start\n'
 
             const stop = this.stops.find((a)=> { return a.value == stopId});
 
-            this.errorMessage = this.errorMessage + 'in update start' + stop.value + ' ' + stop.label + '\n';
+            // this.errorMessage = this.errorMessage + 'in update start' + stop.value + ' ' + stop.label + '\n';
 
             if (stop) {
                 window.document.title = "Ruter - " + stop.label;
-                this.errorMessage = this.errorMessage + 'in Update end\n';
+                // this.errorMessage = this.errorMessage + 'in Update end\n';
                 this.getTimes(stop);
             } else {
-                this.errorMessage = this.errorMessage + "Oops, looks like that stop ID doesn't exist, or at least I don't have it. Try searching instead.\n";
+                this.errorMessage = "Oops, looks like that stop ID doesn't exist, or at least I don't have it. Try searching instead.";
 
             }
         },
@@ -249,7 +279,11 @@ export default {
 
         // push new stop to the router
         changeStop (stop) {
-            this.$router.push({name: 'stop', params: {value: stop.value}})
+            if (stop) {
+                this.search = '';
+                this.$router.push({name: 'stop', params: {value: stop.value}})
+                this.search = '';
+            }
         },
 
         // For clicking the refresh button. do nothing if no current stop
@@ -261,8 +295,8 @@ export default {
 
         // Get data for a stop. Stop is passed as the {'value': 1234567, 'label': 'Central Station'} object
         getTimes: function (stop) {
-            console.log('getTimes: ', stop.value, stop.label);
-            this.errorMessage = this.errorMessage + 'in getTimes\n'
+            // console.log('getTimes: ', stop.value, stop.label);
+            // this.errorMessage = this.errorMessage + 'in getTimes\n'
             this.currentStop = stop;
             this.placeholder = stop.label
 
@@ -276,11 +310,11 @@ export default {
             this.lastUpdated = Date.now();
 
             const path = 'https://reisapi.ruter.no/StopVisit/GetDepartures/' + stop.value;
-            console.log('path', path);
+            // console.log('path', path);
             axios.get(path)
             .then((response) => {
-                console.log('response received');
-                this.errorMessage = this.errorMessage + 'got response\n'
+                // console.log('response received');
+                // this.errorMessage = this.errorMessage + 'got response\n'
                 this.formatData(response.data);
             })
             .catch(() => {
@@ -388,6 +422,13 @@ export default {
             }
 
             return seconds + ' seconds ago';
+        },
+        filteredData () {
+            if (this.search.length < 3) {
+                return [];
+            } else {
+                return this.stops.filter(item => this.normalise(item.label).indexOf(this.normalise(this.search)) > -1);
+            }
         },
     }
 };
