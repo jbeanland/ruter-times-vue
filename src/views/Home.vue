@@ -200,6 +200,7 @@ export default {
             const stop = this.stops.find((a)=> { return a.value == stopId});
             if (stop) {
                 window.document.title = "Ruter - " + stop.label;
+                this.errorMessage = this.errorMessage + 'in Update\n'
                 this.getTimes(stop);
             } else {
                 this.errorMessage = "Oops, looks like that stop ID doesn't exist, or at least I don't have it. Try searching instead.";
@@ -249,7 +250,7 @@ export default {
         // Get data for a stop. Stop is passed as the {'value': 1234567, 'label': 'Central Station'} object
         getTimes: function (stop) {
             console.log('getTimes: ', stop.value, stop.label);
-            this.errorMessage = '';
+            this.errorMessage = this.errorMessage + 'in getTimes\n'
             this.currentStop = stop;
             this.placeholder = stop.label
 
@@ -267,6 +268,7 @@ export default {
             axios.get(path)
             .then((response) => {
                 console.log('response received');
+                this.errorMessage = this.errorMessage + 'got response\n'
                 this.formatData(response.data);
             })
             .catch(() => {
