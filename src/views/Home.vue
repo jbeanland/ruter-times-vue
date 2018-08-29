@@ -248,6 +248,7 @@ export default {
 
         // Get data for a stop. Stop is passed as the {'value': 1234567, 'label': 'Central Station'} object
         getTimes: function (stop) {
+            console.log('getTimes: ', stop.value, stop.label);
             this.errorMessage = '';
             this.currentStop = stop;
             this.placeholder = stop.label
@@ -262,8 +263,10 @@ export default {
             this.lastUpdated = Date.now();
 
             const path = 'https://reisapi.ruter.no/StopVisit/GetDepartures/' + stop.value;
+            console.log('path', path);
             axios.get(path)
             .then((response) => {
+                console.log('response received');
                 this.formatData(response.data);
             })
             .catch(() => {
